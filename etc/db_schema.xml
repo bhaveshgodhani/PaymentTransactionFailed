@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="payment_transaction_failed" resource="default" engine="innodb"
+           comment="Payment Transaction Failed Bot Attack">
+        <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true"
+                comment="ID"/>
+        <column xsi:type="int" name="quote_id" unsigned="true" nullable="true" comment="Quote ID"/>
+        <column xsi:type="varchar" name="customer_email" nullable="true" length="255"
+                comment="Customer Email"/>
+        <column xsi:type="varchar" name="remote_ip" nullable="true" length="45" comment="Remote IP"/>
+        <column xsi:type="varchar" name="request_path" nullable="true" length="255"
+                comment="Request Path"/>
+        <column xsi:type="smallint" name="http_status" unsigned="true" nullable="true"
+                comment="HTTP Status"/>
+        <column xsi:type="smallint" name="is_guest" unsigned="true" nullable="false" default="1"
+                comment="Is Guest"/>
+        <column xsi:type="varchar" name="reason" nullable="true" length="255" comment="Fail Reason"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false"
+                default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
+        <index referenceId="PAYMENT_TRANSACTION_FAILED_REMOTE_IP_CREATED_AT" indexType="btree">
+            <column name="remote_ip"/>
+            <column name="created_at"/>
+        </index>
+    </table>
+</schema>

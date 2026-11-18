@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="Magento_Backend::stores">
+                    <resource id="Magento_Backend::stores_settings">
+                        <resource id="Magento_Config::config">
+                            <resource id="Commercepundit_PaymentTransactionFailed::config"
+                                      title="Payment Transaction Failed Config"
+                                      sortOrder="90"/>
+                        </resource>
+                    </resource>
+                </resource>
+                <resource id="Commercepundit_PaymentTransactionFailed::failed"
+                          title="Payment Transaction Failed"
+                          sortOrder="91">
+                    <resource id="Commercepundit_PaymentTransactionFailed::failed_view"
+                              title="View Failed Payment Records"
+                              sortOrder="5"/>
+                    <resource id="Commercepundit_PaymentTransactionFailed::failed_delete"
+                              title="Delete Failed Payment Records"
+                              sortOrder="10"/>
+                </resource>
+            </resource>
+        </resources>
+    </acl>
+</config>

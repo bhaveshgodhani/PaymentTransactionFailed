@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Commercepundit\PaymentTransactionFailed\Logger\Handler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Commercepundit\PaymentTransactionFailed\Logger\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">BotPaymentFail</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">Commercepundit\PaymentTransactionFailed\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Commercepundit\PaymentTransactionFailed\Model\IpGuard">
+        <arguments>
+            <argument name="logger" xsi:type="object">Commercepundit\PaymentTransactionFailed\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Commercepundit\PaymentTransactionFailed\Model\FailedAttemptRepository">
+        <arguments>
+            <argument name="logger" xsi:type="object">Commercepundit\PaymentTransactionFailed\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Commercepundit\PaymentTransactionFailed\Plugin\PaymentInformationManagementPlugin">
+        <arguments>
+            <argument name="logger" xsi:type="object">Commercepundit\PaymentTransactionFailed\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Commercepundit\PaymentTransactionFailed\Plugin\GuestPaymentInformationManagementPlugin">
+        <arguments>
+            <argument name="logger" xsi:type="object">Commercepundit\PaymentTransactionFailed\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Commercepundit\PaymentTransactionFailed\Plugin\PaymentFailuresServicePlugin">
+        <arguments>
+            <argument name="logger" xsi:type="object">Commercepundit\PaymentTransactionFailed\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Commercepundit\PaymentTransactionFailed\Observer\CartProductAddBeforeObserver">
+        <arguments>
+            <argument name="logger" xsi:type="object">Commercepundit\PaymentTransactionFailed\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <!--
+      Config is injected via Proxy to avoid circular DI:
+      ScopeConfigInterface -> ForceOrderRateLimitingPlugin -> Config -> ScopeConfigInterface
+    -->
+    <type name="Commercepundit\PaymentTransactionFailed\Plugin\ForceOrderRateLimitingPlugin">
+        <arguments>
+            <argument name="config" xsi:type="object">Commercepundit\PaymentTransactionFailed\Model\Config\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\App\Config\ScopeConfigInterface">
+        <plugin name="commercepundit_ptf_force_order_rate_limiting"
+                type="Commercepundit\PaymentTransactionFailed\Plugin\ForceOrderRateLimitingPlugin"
+                sortOrder="50"/>
+    </type>
+
+    <!--
+      Do NOT plugin Magento\TwoFactorAuth\...\Leeway directly.
+      That hard-depends on Magento_TwoFactorAuth and can conflict when 2FA is disabled.
+      Wrap via ProcessorFactory instead (always present).
+    -->
+    <type name="Magento\Framework\App\Config\Data\ProcessorFactory">
+        <plugin name="commercepundit_ptf_leeway_safe_processor"
+                type="Commercepundit\PaymentTransactionFailed\Plugin\ProcessorFactoryLeewaySafePlugin"
+                sortOrder="10"/>
+    </type>
+
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="payment_transaction_failed_listing_data_source" xsi:type="string">
+                    Commercepundit\PaymentTransactionFailed\Model\ResourceModel\FailedAttempt\Grid\Collection
+                </item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Commercepundit\PaymentTransactionFailed\Model\ResourceModel\FailedAttempt\Grid\Collection">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">payment_transaction_failed</argument>
+            <argument name="resourceModel" xsi:type="string">
+                Commercepundit\PaymentTransactionFailed\Model\ResourceModel\FailedAttempt
+            </argument>
+            <argument name="identifierName" xsi:type="string">entity_id</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Checkout\Model\PaymentInformationManagement">
+        <plugin name="commercepundit_ptf_payment_information"
+                type="Commercepundit\PaymentTransactionFailed\Plugin\PaymentInformationManagementPlugin"
+                sortOrder="20"/>
+    </type>
+    <type name="Magento\Checkout\Model\GuestPaymentInformationManagement">
+        <plugin name="commercepundit_ptf_guest_payment_information"
+                type="Commercepundit\PaymentTransactionFailed\Plugin\GuestPaymentInformationManagementPlugin"
+                sortOrder="20"/>
+    </type>
+    <type name="Magento\Sales\Model\Service\PaymentFailuresService">
+        <plugin name="commercepundit_ptf_payment_failures"
+                type="Commercepundit\PaymentTransactionFailed\Plugin\PaymentFailuresServicePlugin"
+                sortOrder="20"/>
+    </type>
+</config>

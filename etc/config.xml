@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <commercepundit>
+            <paymenttransactionfailed>
+                <enabled>1</enabled>
+                <force_magento_order_rate_limiting>1</force_magento_order_rate_limiting>
+                <send_payment_failed_email>1</send_payment_failed_email>
+                <suppress_email_for_bots>1</suppress_email_for_bots>
+                <block_high_confidence_bots>1</block_high_confidence_bots>
+                <number>5</number>
+                <number_bot>3</number_bot>
+                <time_window_minutes>60</time_window_minutes>
+                <bypass_ids></bypass_ids>
+                <suppress_email_when_blocked>1</suppress_email_when_blocked>
+                <track_browse>1</track_browse>
+                <min_browse_hits>2</min_browse_hits>
+            </paymenttransactionfailed>
+        </commercepundit>
+        <!--
+            Magento native order Rate Limiting (sales/backpressure).
+            Present/enforced on 2.4.7+/2.4.8; ignored on builds without quote-order backpressure (e.g. some 2.4.6).
+            Magento core default is enabled=0 — we enable sensible defaults for bot protection.
+        -->
+        <sales>
+            <backpressure>
+                <enabled>1</enabled>
+                <limit>10</limit>
+                <guest_limit>5</guest_limit>
+                <period>60</period>
+            </backpressure>
+        </sales>
+    </default>
+</config>

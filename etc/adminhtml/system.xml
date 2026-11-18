@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="commercepundit" translate="label" sortOrder="202">
+            <label>Commercepundit</label>
+        </tab>
+        <section id="commercepundit" translate="label" type="text" sortOrder="900"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment Transaction Failed</label>
+            <tab>commercepundit</tab>
+            <resource>Commercepundit_PaymentTransactionFailed::config</resource>
+            <group id="paymenttransactionfailed" translate="label" type="text" sortOrder="100"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Payment Transaction Failed</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="5"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Enable Module</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>If No, all frontend/API fraud checks, browse tracking, failed-payment logging, email suppress/force-rate-limit from this module are skipped. Magento checkout works as core.</comment>
+                </field>
+                <field id="force_magento_order_rate_limiting" translate="label comment" type="select"
+                       sortOrder="6" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Force Magento Order Rate Limiting</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[When Yes, Magento native Rate Limiting (Stores → Configuration → Sales → Sales → Rate limiting / sales/backpressure) is treated as enabled even if set to No. Works on Magento 2.4.7+ (including 2.4.9). On builds without that feature this setting is ignored and this module’s own IP fraud guard still works.]]></comment>
+                </field>
+                <field id="send_payment_failed_email" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Send Payment Failed Email Notification</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>If No, Magento will not email admin/BCC on payment failures. Failed attempts are still logged and IPs can still be blocked.</comment>
+                </field>
+                <field id="suppress_email_for_bots" translate="label comment" type="select" sortOrder="11"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Suppress email for high-confidence bots</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Skip admin/BCC email for probe patterns (zero total, empty cart, @example.test, Lab Probe, etc.).</comment>
+                </field>
+                <field id="block_high_confidence_bots" translate="label comment" type="select" sortOrder="12"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Block high-confidence bots immediately</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Block on first payment attempt when bot score is high (live scanner/probe pattern). Safe for normal customers.</comment>
+                </field>
+                <field id="number" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Number of try payment transaction failed</label>
+                    <comment>Enter a whole number only (e.g. 2, 5). Used when the IP also browsed catalog/CMS pages (likely a real customer).</comment>
+                    <backend_model>Commercepundit\PaymentTransactionFailed\Model\Config\Backend\PositiveInteger</backend_model>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="number_bot" translate="label comment" type="text" sortOrder="22"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Stricter limit for payment-only IPs (bots)</label>
+                    <comment>Enter a whole number only. Used when the IP only hit payment URLs and did not browse other pages. Default 3.</comment>
+                    <backend_model>Commercepundit\PaymentTransactionFailed\Model\Config\Backend\PositiveInteger</backend_model>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="time_window_minutes" translate="label comment" type="text" sortOrder="23"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Failure count time window (minutes)</label>
+                    <comment>Enter a whole number only. Only failures inside this window count toward the block limit.</comment>
+                    <backend_model>Commercepundit\PaymentTransactionFailed\Model\Config\Backend\PositiveInteger</backend_model>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="bypass_ids" translate="label comment" type="text" sortOrder="25"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>By Pass Ips to Not block them</label>
+                    <comment>By Pass Ips to Not block them. Comma-separated list.</comment>
+                </field>
+                <field id="track_browse" translate="label comment" type="select" sortOrder="30"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Track whether IP browsed other pages</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>If Yes, IPs that only hit payment endpoints use the stricter bot limit.</comment>
+                </field>
+                <field id="min_browse_hits" translate="label comment" type="text" sortOrder="31"
+                       showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Minimum non-payment page hits to treat as real visitor</label>
+                    <comment>Enter a whole number only. Catalog/CMS/search page views required before using the higher customer threshold.</comment>
+                    <backend_model>Commercepundit\PaymentTransactionFailed\Model\Config\Backend\PositiveInteger</backend_model>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                    <depends>
+                        <field id="track_browse">1</field>
+                    </depends>
+                </field>
+                <field id="suppress_email_when_blocked" translate="label comment" type="select"
+                       sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Suppress Magento payment-failed emails for blocked IPs</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Stops email flood once an IP is already over the limit.</comment>
+                </field>
+                <field id="delete_by_ip" translate="label comment" sortOrder="50"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Remove failed payment rows by IP</label>
+                    <frontend_model>Commercepundit\PaymentTransactionFailed\Block\Adminhtml\System\Config\DeleteByIp</frontend_model>
+                    <comment>Enter multiple IP addresses separated by commas, then use the button to delete matching rows from payment_transaction_failed (exact IP match).</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

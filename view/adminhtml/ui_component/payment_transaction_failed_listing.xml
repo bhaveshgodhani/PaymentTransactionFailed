@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">payment_transaction_failed_listing.payment_transaction_failed_listing_data_source</item>
+        </item>
+    </argument>
+    <settings>
+        <spinner>payment_transaction_failed_columns</spinner>
+        <deps>
+            <dep>payment_transaction_failed_listing.payment_transaction_failed_listing_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="payment_transaction_failed_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">entity_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>Commercepundit_PaymentTransactionFailed::failed_view</aclResource>
+        <dataProvider class="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider"
+                      name="payment_transaction_failed_listing_data_source">
+            <settings>
+                <requestFieldName>entity_id</requestFieldName>
+                <primaryFieldName>entity_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <listingToolbar name="listing_top">
+        <settings>
+            <sticky>true</sticky>
+        </settings>
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <filters name="listing_filters"/>
+        <massaction name="listing_massaction">
+            <action name="delete">
+                <settings>
+                    <confirm>
+                        <message>Are you sure you want to delete selected records?</message>
+                        <title>Delete items</title>
+                    </confirm>
+                    <url path="paymenttransactionfailed/failed/massDelete"/>
+                    <type>delete</type>
+                    <label translate="true">Delete</label>
+                </settings>
+            </action>
+        </massaction>
+        <paging name="listing_paging"/>
+    </listingToolbar>
+    <columns name="payment_transaction_failed_columns">
+        <settings>
+            <editorConfig>
+                <param name="enabled" xsi:type="boolean">false</param>
+            </editorConfig>
+        </settings>
+        <selectionsColumn name="ids">
+            <settings>
+                <indexField>entity_id</indexField>
+            </settings>
+        </selectionsColumn>
+        <column name="entity_id">
+            <settings>
+                <filter>textRange</filter>
+                <label translate="true">ID</label>
+                <sorting>desc</sorting>
+            </settings>
+        </column>
+        <column name="quote_id">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Quote ID</label>
+            </settings>
+        </column>
+        <column name="customer_email">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Customer Email</label>
+            </settings>
+        </column>
+        <column name="remote_ip">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Remote IP</label>
+            </settings>
+        </column>
+        <column name="request_path">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Request Path</label>
+            </settings>
+        </column>
+        <column name="http_status">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">HTTP Status</label>
+            </settings>
+        </column>
+        <column name="is_guest">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Is Guest</label>
+            </settings>
+        </column>
+        <column name="reason">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Reason</label>
+            </settings>
+        </column>
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date" component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <dataType>date</dataType>
+                <label translate="true">Created At</label>
+            </settings>
+        </column>
+        <actionsColumn name="actions" class="Commercepundit\PaymentTransactionFailed\Ui\Component\Listing\Column\Actions">
+            <settings>
+                <indexField>entity_id</indexField>
+                <label translate="true">Actions</label>
+            </settings>
+        </actionsColumn>
+    </columns>
+</listing>

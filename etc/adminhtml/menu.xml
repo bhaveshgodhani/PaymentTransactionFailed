@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Commercepundit_PaymentTransactionFailed::failed_menu"
+             title="Payment Transaction Failed"
+             module="Commercepundit_PaymentTransactionFailed"
+             sortOrder="100"
+             parent="Magento_Sales::sales"
+             action="paymenttransactionfailed/failed/index"
+             resource="Commercepundit_PaymentTransactionFailed::failed"/>
+    </menu>
+</config>

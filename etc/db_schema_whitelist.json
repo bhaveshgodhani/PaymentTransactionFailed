@@ -1,0 +1,21 @@
+{
+    "payment_transaction_failed": {
+        "column": {
+            "entity_id": true,
+            "quote_id": true,
+            "customer_email": true,
+            "remote_ip": true,
+            "request_path": true,
+            "http_status": true,
+            "is_guest": true,
+            "reason": true,
+            "created_at": true
+        },
+        "index": {
+            "PAYMENT_TRANSACTION_FAILED_REMOTE_IP_CREATED_AT": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}

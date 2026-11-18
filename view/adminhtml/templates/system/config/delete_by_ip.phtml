@@ -1,0 +1,43 @@
+<?php
+/** @var \Commercepundit\PaymentTransactionFailed\Block\Adminhtml\System\Config\DeleteByIp $block */
+?>
+<div class="ptf-delete-by-ip">
+    <textarea id="ptf_delete_ips"
+              class="admin__control-textarea"
+              rows="4"
+              style="width:100%;max-width:480px;"
+              placeholder="<?= $block->escapeHtmlAttr(__('e.g. 192.168.1.1, 10.0.0.5')) ?>"></textarea>
+    <div style="margin-top:8px;">
+        <?= $block->getButtonHtml() ?>
+    </div>
+    <p class="note" id="ptf_delete_result" style="margin-top:8px;"></p>
+</div>
+<script>
+require(['jquery', 'Magento_Ui/js/modal/alert'], function ($, alert) {
+    'use strict';
+    $('#ptf_delete_by_ip_button').on('click', function (event) {
+        event.preventDefault();
+        var ips = $('#ptf_delete_ips').val();
+        if (!ips || !String(ips).trim()) {
+            alert({content: '<?= $block->escapeJs(__('Please enter at least one IP address.')) ?>'});
+            return;
+        }
+        $.ajax({
+            url: '<?= $block->escapeJs($block->getAjaxUrl()) ?>',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                ips: ips,
+                form_key: window.FORM_KEY
+            },
+            showLoader: true
+        }).done(function (response) {
+            var message = (response && response.message) ? response.message : 'Done';
+            $('#ptf_delete_result').text(message);
+            alert({content: message});
+        }).fail(function () {
+            alert({content: '<?= $block->escapeJs(__('Request failed. Please try again.')) ?>'});
+        });
+    });
+});
+</script>

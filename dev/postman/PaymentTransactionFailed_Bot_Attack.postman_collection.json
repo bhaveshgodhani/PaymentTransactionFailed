@@ -1,0 +1,242 @@
+{
+  "info": {
+    "_postman_id": "ptf-bot-attack-test-001",
+    "name": "Commercepundit PaymentTransactionFailed - Bot Attack Test",
+    "description": "Simulate guest bot payment attacks against Magento REST payment-information.\n\nSetup:\n1. Set collection variable `base_url` (e.g. https://your-store.local)\n2. Set `sku` to a real simple product SKU\n3. In Admin: Stores > Configuration > Commercepundit > Payment Transaction Failed\n   - Enable = Yes\n   - Stricter bot limit = 3 (or 2 for faster test)\n   - Remove your IP from Bypass\n   - Track browse = Yes\n4. Run folder \"1. Guest Bot Attack (no browse)\" in order, repeat step 1.5 until blocked.\n5. Watch var/log/BotPaymentFail.log and table payment_transaction_failed.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://dev.bigcitysportswear.com" },
+    { "key": "store_code", "value": "default" },
+    { "key": "sku", "value": "2146-White-XS" },
+    { "key": "qty", "value": "1" },
+    { "key": "guest_cart_id", "value": "" },
+    { "key": "customer_token", "value": "" },
+    { "key": "customer_email", "value": "attacker+test@example.invalid" },
+    { "key": "customer_password", "value": "Test@123456" }
+  ],
+  "item": [
+    {
+      "name": "1. Guest Bot Attack (no browse)",
+      "description": "Pure API hits — no frontend browse — should use bot limit (default 3).",
+      "item": [
+        {
+          "name": "1.1 Create guest cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const cartId = pm.response.text().replace(/\"/g, '');",
+                  "  pm.collectionVariables.set('guest_cart_id', cartId);",
+                  "  console.log('guest_cart_id=', cartId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "" },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/guest-carts",
+            "description": "Creates empty guest cart. Saves masked cart id to guest_cart_id."
+          }
+        },
+        {
+          "name": "1.2 Add product to guest cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cartItem\": {\n    \"sku\": \"{{sku}}\",\n    \"qty\": {{qty}},\n    \"quote_id\": \"{{guest_cart_id}}\"\n  }\n}"
+            },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/guest-carts/{{guest_cart_id}}/items"
+          }
+        },
+        {
+          "name": "1.3 Estimate shipping + set shipping info",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressInformation\": {\n    \"shipping_address\": {\n      \"firstname\": \"Probe\",\n      \"lastname\": \"Lab\",\n      \"street\": [\"1 Attack St\"],\n      \"city\": \"London\",\n      \"region\": \"London\",\n      \"region_id\": 0,\n      \"postcode\": \"E1 1AA\",\n      \"country_id\": \"GB\",\n      \"telephone\": \"000\",\n      \"email\": \"{{customer_email}}\"\n    },\n    \"billing_address\": {\n      \"firstname\": \"Probe\",\n      \"lastname\": \"Lab\",\n      \"street\": [\"1 Attack St\"],\n      \"city\": \"London\",\n      \"region\": \"London\",\n      \"region_id\": 0,\n      \"postcode\": \"E1 1AA\",\n      \"country_id\": \"GB\",\n      \"telephone\": \"000\",\n      \"email\": \"{{customer_email}}\"\n    },\n    \"shipping_carrier_code\": \"flatrate\",\n    \"shipping_method_code\": \"flatrate\"\n  }\n}"
+            },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/guest-carts/{{guest_cart_id}}/shipping-information",
+            "description": "Adjust shipping_carrier_code / shipping_method_code to a method enabled on your store (flatrate, tablerate, freeshipping, etc)."
+          }
+        },
+        {
+          "name": "1.4 Get payment methods (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/rest/{{store_code}}/V1/guest-carts/{{guest_cart_id}}/payment-methods"
+          }
+        },
+        {
+          "name": "1.5 ATTACK - payment-information (repeat until blocked)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('HTTP', pm.response.code);",
+                  "console.log(pm.response.text());",
+                  "pm.test('Expect 400 until blocked, then blocked message', function () {",
+                  "  pm.expect([400, 401, 403, 500]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "User-Agent", "value": "" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customer_email}}\",\n  \"paymentMethod\": {\n    \"method\": \"checkmo\",\n    \"additional_data\": {\n      \"cc_number\": \"4111111111111111\",\n      \"cc_cid\": \"999\",\n      \"cc_type\": \"VI\",\n      \"cc_exp_year\": \"2020\",\n      \"cc_exp_month\": \"01\"\n    }\n  },\n  \"billingAddress\": {\n    \"firstname\": \"Probe\",\n    \"lastname\": \"Lab\",\n    \"street\": [\"1 Attack St\"],\n    \"city\": \"London\",\n    \"postcode\": \"E1 1AA\",\n    \"country_id\": \"GB\",\n    \"telephone\": \"000\",\n    \"email\": \"{{customer_email}}\"\n  }\n}"
+            },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/guest-carts/{{guest_cart_id}}/payment-information",
+            "description": "Run this 3–5 times quickly from the same IP.\n\nExpected:\n- Early attempts: 400 with payment/order error\n- After bot limit (default 3, no browse): 400 with \"Multiple unsuccessful attempts stopped your order from being placed...\"\n- Rows appear in payment_transaction_failed\n- Lines appear in var/log/BotPaymentFail.log\n\nTip: use method checkmo / fake card / disabled method so placeOrder fails. If checkmo succeeds on your store, switch method to a bad code like \"fake_payment\"."
+          }
+        },
+        {
+          "name": "1.6 ATTACK - fake payment method (forces failure)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"probe@example.invalid\",\n  \"paymentMethod\": {\n    \"method\": \"fake_bot_payment\"\n  },\n  \"billingAddress\": {\n    \"firstname\": \"Probe\",\n    \"lastname\": \"Lab\",\n    \"street\": [\"1 Attack St\"],\n    \"city\": \"London\",\n    \"postcode\": \"E1 1AA\",\n    \"country_id\": \"GB\",\n    \"telephone\": \"000\",\n    \"email\": \"probe@example.invalid\"\n  }\n}"
+            },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/guest-carts/{{guest_cart_id}}/payment-information",
+            "description": "Use this if checkmo places a real order. fake_bot_payment should always fail and count toward the block."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Customer Attack (mine/payment-information)",
+      "description": "Logged-in customer path that produced 400s on /V1/carts/mine/payment-information.",
+      "item": [
+        {
+          "name": "2.1 Get customer token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const token = pm.response.text().replace(/\"/g, '');",
+                  "  pm.collectionVariables.set('customer_token', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{customer_email}}\",\n  \"password\": \"{{customer_password}}\"\n}"
+            },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/integration/customer/token"
+          }
+        },
+        {
+          "name": "2.2 Create customer cart (mine)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "" },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/carts/mine"
+          }
+        },
+        {
+          "name": "2.3 Add item to mine cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cartItem\": {\n    \"sku\": \"{{sku}}\",\n    \"qty\": {{qty}}\n  }\n}"
+            },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/carts/mine/items"
+          }
+        },
+        {
+          "name": "2.4 Set shipping information (mine)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressInformation\": {\n    \"shipping_address\": {\n      \"firstname\": \"Probe\",\n      \"lastname\": \"Lab\",\n      \"street\": [\"1 Attack St\"],\n      \"city\": \"London\",\n      \"postcode\": \"E1 1AA\",\n      \"country_id\": \"GB\",\n      \"telephone\": \"000\"\n    },\n    \"billing_address\": {\n      \"firstname\": \"Probe\",\n      \"lastname\": \"Lab\",\n      \"street\": [\"1 Attack St\"],\n      \"city\": \"London\",\n      \"postcode\": \"E1 1AA\",\n      \"country_id\": \"GB\",\n      \"telephone\": \"000\"\n    },\n    \"shipping_carrier_code\": \"flatrate\",\n    \"shipping_method_code\": \"flatrate\"\n  }\n}"
+            },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/carts/mine/shipping-information"
+          }
+        },
+        {
+          "name": "2.5 ATTACK - mine/payment-information (repeat)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": {\n    \"method\": \"fake_bot_payment\"\n  },\n  \"billingAddress\": {\n    \"firstname\": \"Probe\",\n    \"lastname\": \"Lab\",\n    \"street\": [\"1 Attack St\"],\n    \"city\": \"London\",\n    \"postcode\": \"E1 1AA\",\n    \"country_id\": \"GB\",\n    \"telephone\": \"000\"\n  }\n}"
+            },
+            "url": "{{base_url}}/rest/{{store_code}}/V1/carts/mine/payment-information",
+            "description": "This is the URL that returned 60x HTTP 400 in production. Repeat until blocked."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Verify / Cleanup helpers",
+      "item": [
+        {
+          "name": "3.1 Open BotPaymentFail.log (manual)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/",
+            "description": "On server run:\ntail -f var/log/BotPaymentFail.log\n\nSELECT * FROM payment_transaction_failed ORDER BY entity_id DESC LIMIT 20;"
+          }
+        }
+      ]
+    }
+  ]
+}
